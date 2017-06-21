@@ -1,24 +1,33 @@
 package org.mtransit.parser.ca_kamloops_transit_system_bus;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.Pair;
+import org.mtransit.parser.SplitUtils;
 import org.mtransit.parser.Utils;
+import org.mtransit.parser.SplitUtils.RouteTripSpec;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
 import org.mtransit.parser.gtfs.data.GSpec;
+import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
+import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MRoute;
+import org.mtransit.parser.mt.data.MTripStop;
 import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
 
-// http://bctransit.com/*/footer/open-data
-// http://bctransit.com/servlet/bctransit/data/GTFS.zip
-// http://bct2.baremetal.com:8080/GoogleTransit/BCTransit/google_transit.zip
+// https://bctransit.com/*/footer/open-data
+// https://bctransit.com/servlet/bctransit/data/GTFS - Kamloops
 public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -159,14 +168,154 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
+	private static final String EXCHANGE_SHORT = "Exch";
+
+	private static final String ABERDEEN = "Aberdeen";
+	private static final String DOWNTOWN = "Downtown";
+	private static final String KOKANEE_WAY = "Kokanee Way";
+	private static final String NORTH_SHORE = "North Shr";
+	private static final String NORTH_ShORE_EXCHANGE = NORTH_SHORE + " " + EXCHANGE_SHORT;
+	private static final String SUMMIT = "Summit";
+	private static final String TRU = "TRU";
+	private static final String UPPER_SAHALI = "Upper Sahali";
+	private static final String WILDLIFE_PARK = "Wildlife Pk";
+
+	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+	static {
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		map2.put(7L, new RouteTripSpec(7L, //
+				0, MTrip.HEADSIGN_TYPE_STRING, DOWNTOWN, //
+				1, MTrip.HEADSIGN_TYPE_STRING, ABERDEEN) //
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"104534", // Eastbound Laurier at Sifton
+								"104437", // TRU Exchange Bay D
+								"104440", // == Eastbound McGill at Summit
+								"104441", // != Eastbound McGill at Frontage
+								"104706", // != Northbound 6th Ave at St Paul
+								//
+								"104559", // != Northbound 640 block Columbia St W
+								"104263", // != Eastbound Seymour at 4th Ave
+								"104264", // == Northbound 6th Ave at Victoria
+								"104504", // Lansdowne Exchange Bay C
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"104504", // Lansdowne Exchange Bay C
+								"104393", // == Westbound Columbia at 3rd Ave
+								"104450", // != Northbound 3rd Ave at Columbia
+								"104511", // != Southbound Columbia St W at Frontage
+								//
+								"104394", // != Eastbound 750 block Sahali
+								"104400", // != Westbound McGill at Frontage
+								"104401", // == Westbound McGill at Summit
+								"104512", // TRU Exchange Bay F
+								"104534", // Eastbound Laurier at Sifton
+						})) //
+				.compileBothTripSort());
+		ALL_ROUTE_TRIPS2 = map2;
+	}
+
+	@Override
+	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
+		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+		}
+		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+	}
+
+	@Override
+	public ArrayList<MTrip> splitTrip(MRoute mRoute, GTrip gTrip, GSpec gtfs) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return ALL_ROUTE_TRIPS2.get(mRoute.getId()).getAllTrips();
+		}
+		return super.splitTrip(mRoute, gTrip, gtfs);
+	}
+
+	@Override
+	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+		}
+		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
+	}
+
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
+		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
+			return; // split
+		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 
-	private static final String EXCH = "Exch";
-	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W){1}(exchange)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
-	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCH + "$4";
+	@Override
+	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
+		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
+		if (mTrip.getRouteId() == 1L) {
+			if (Arrays.asList( //
+					NORTH_ShORE_EXCHANGE, //
+					DOWNTOWN //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 2L) {
+			if (Arrays.asList( //
+					NORTH_ShORE_EXCHANGE, //
+					DOWNTOWN //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 3L) {
+			if (Arrays.asList( //
+					NORTH_ShORE_EXCHANGE, //
+					DOWNTOWN //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 9L) {
+			if (Arrays.asList( //
+					UPPER_SAHALI, //
+					TRU, //
+					SUMMIT //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(SUMMIT, mTrip.getHeadsignId()); // UPPER_SAHALI
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 14L) {
+			if (Arrays.asList( //
+					NORTH_SHORE, //
+					NORTH_ShORE_EXCHANGE //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(NORTH_ShORE_EXCHANGE, mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 16L) {
+			if (Arrays.asList( //
+					DOWNTOWN, //
+					TRU //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(TRU, mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (mTrip.getRouteId() == 17L) {
+			if (Arrays.asList( //
+					KOKANEE_WAY, //
+					WILDLIFE_PARK //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(WILDLIFE_PARK, mTrip.getHeadsignId());
+				return true;
+			}
+		}
+		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
+		System.exit(-1);
+		return false;
+	}
+
+	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W){1}(exchange|ex\\.)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCHANGE_SHORT + "$4";
 
 	private static final Pattern STARTS_WITH_NUMBER = Pattern.compile("(^[\\d]+[\\S]*)", Pattern.CASE_INSENSITIVE);
 
@@ -197,13 +346,11 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	private static final Pattern STARTS_WITH_BOUND = Pattern.compile("(^(east|west|north|south)bound)", Pattern.CASE_INSENSITIVE);
 
-	private static final Pattern AT = Pattern.compile("( at )", Pattern.CASE_INSENSITIVE);
-	private static final String AT_REPLACEMENT = " / ";
 
 	@Override
 	public String cleanStopName(String gStopName) {
 		gStopName = STARTS_WITH_BOUND.matcher(gStopName).replaceAll(StringUtils.EMPTY);
-		gStopName = AT.matcher(gStopName).replaceAll(AT_REPLACEMENT);
+		gStopName = CleanUtils.CLEAN_AT.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
 		gStopName = EXCHANGE.matcher(gStopName).replaceAll(EXCHANGE_REPLACEMENT);
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
