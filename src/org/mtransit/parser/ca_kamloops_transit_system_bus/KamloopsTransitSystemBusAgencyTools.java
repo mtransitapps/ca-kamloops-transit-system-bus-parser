@@ -162,7 +162,12 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			case 17: return COLOR_0073AE;
 			// @formatter:on
 			default:
-				return AGENCY_COLOR_BLUE;
+				if (isGoodEnoughAccepted()) {
+					return AGENCY_COLOR_BLUE;
+				}
+				System.out.println("Unexpected route color " + gRoute);
+				System.exit(-1);
+				return null;
 			}
 		}
 		return super.getRouteColor(gRoute);
@@ -172,6 +177,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	private static final String ABERDEEN = "Aberdeen";
 	private static final String DOWNTOWN = "Downtown";
+	private static final String HARRINGTON = "Harrington";
 	private static final String KOKANEE_WAY = "Kokanee Way";
 	private static final String NORTH_SHORE = "North Shr";
 	private static final String NORTH_ShORE_EXCHANGE = NORTH_SHORE + " " + EXCHANGE_SHORT;
@@ -193,7 +199,6 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 								"104440", // == Eastbound McGill at Summit
 								"104441", // != Eastbound McGill at Frontage
 								"104706", // != Northbound 6th Ave at St Paul
-								//
 								"104559", // != Northbound 640 block Columbia St W
 								"104263", // != Eastbound Seymour at 4th Ave
 								"104264", // == Northbound 6th Ave at Victoria
@@ -205,7 +210,6 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 								"104393", // == Westbound Columbia at 3rd Ave
 								"104450", // != Northbound 3rd Ave at Columbia
 								"104511", // != Southbound Columbia St W at Frontage
-								//
 								"104394", // != Eastbound 750 block Sahali
 								"104400", // != Westbound McGill at Frontage
 								"104401", // == Westbound McGill at Summit
@@ -277,19 +281,28 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			}
 		} else if (mTrip.getRouteId() == 9L) {
 			if (Arrays.asList( //
-					UPPER_SAHALI, //
-					TRU, //
-					SUMMIT //
+					DOWNTOWN, // SAME
+					TRU // SAME
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
+				return true;
+			}
+			if (Arrays.asList( //
+					DOWNTOWN, // SAME
+					TRU, // SAME
+					SUMMIT, //
+					UPPER_SAHALI //
 					).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString(SUMMIT, mTrip.getHeadsignId()); // UPPER_SAHALI
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 14L) {
 			if (Arrays.asList( //
+					HARRINGTON, //
 					NORTH_SHORE, //
 					NORTH_ShORE_EXCHANGE //
 					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(NORTH_ShORE_EXCHANGE, mTrip.getHeadsignId());
+				mTrip.setHeadsignString(NORTH_ShORE_EXCHANGE, mTrip.getHeadsignId()); // HARRINGTON
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 16L) {
@@ -308,6 +321,9 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString(WILDLIFE_PARK, mTrip.getHeadsignId());
 				return true;
 			}
+		}
+		if (isGoodEnoughAccepted()) {
+			return super.mergeHeadsign(mTrip, mTripToMerge);
 		}
 		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
 		System.exit(-1);
@@ -345,7 +361,6 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	private static final Pattern STARTS_WITH_BOUND = Pattern.compile("(^(east|west|north|south)bound)", Pattern.CASE_INSENSITIVE);
-
 
 	@Override
 	public String cleanStopName(String gStopName) {
