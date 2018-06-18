@@ -176,11 +176,12 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final String EXCHANGE_SHORT = "Exch";
 
 	private static final String ABERDEEN = "Aberdeen";
+	private static final String BROCKLEHURST = "Brocklehurst";
 	private static final String DOWNTOWN = "Downtown";
 	private static final String HARRINGTON = "Harrington";
 	private static final String KOKANEE_WAY = "Kokanee Way";
 	private static final String NORTH_SHORE = "North Shr";
-	private static final String NORTH_ShORE_EXCHANGE = NORTH_SHORE + " " + EXCHANGE_SHORT;
+	private static final String NORTH_SHORE_EXCHANGE = NORTH_SHORE + " " + EXCHANGE_SHORT;
 	private static final String SUMMIT = "Summit";
 	private static final String TRU = "TRU";
 	private static final String UPPER_SAHALI = "Upper Sahali";
@@ -223,7 +224,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public int compareEarly(long routeId, List<MTripStop> list1, List<MTripStop> list2, MTripStop ts1, MTripStop ts2, GStop ts1GStop, GStop ts2GStop) {
 		if (ALL_ROUTE_TRIPS2.containsKey(routeId)) {
-			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
+			return ALL_ROUTE_TRIPS2.get(routeId).compare(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop, this);
 		}
 		return super.compareEarly(routeId, list1, list2, ts1, ts2, ts1GStop, ts2GStop);
 	}
@@ -239,7 +240,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public Pair<Long[], Integer[]> splitTripStop(MRoute mRoute, GTrip gTrip, GTripStop gTripStop, ArrayList<MTrip> splitTrips, GSpec routeGTFS) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
-			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()));
+			return SplitUtils.splitTripStop(mRoute, gTrip, gTripStop, routeGTFS, ALL_ROUTE_TRIPS2.get(mRoute.getId()), this);
 		}
 		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
 	}
@@ -257,15 +258,21 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
 		if (mTrip.getRouteId() == 1L) {
 			if (Arrays.asList( //
-					NORTH_ShORE_EXCHANGE, //
+					NORTH_SHORE_EXCHANGE, //
 					DOWNTOWN //
 					).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
 				return true;
+			} else if (Arrays.asList( //
+					NORTH_SHORE_EXCHANGE, //
+					BROCKLEHURST //
+					).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString(BROCKLEHURST, mTrip.getHeadsignId());
+				return true;
 			}
 		} else if (mTrip.getRouteId() == 2L) {
 			if (Arrays.asList( //
-					NORTH_ShORE_EXCHANGE, //
+					NORTH_SHORE_EXCHANGE, //
 					DOWNTOWN //
 					).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
@@ -273,7 +280,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			}
 		} else if (mTrip.getRouteId() == 3L) {
 			if (Arrays.asList( //
-					NORTH_ShORE_EXCHANGE, //
+					NORTH_SHORE_EXCHANGE, //
 					DOWNTOWN //
 					).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
@@ -298,11 +305,17 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			}
 		} else if (mTrip.getRouteId() == 14L) {
 			if (Arrays.asList( //
-					HARRINGTON, //
+					HARRINGTON, // ==
 					NORTH_SHORE, //
-					NORTH_ShORE_EXCHANGE //
+					NORTH_SHORE_EXCHANGE //
 					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(NORTH_ShORE_EXCHANGE, mTrip.getHeadsignId()); // HARRINGTON
+				mTrip.setHeadsignString(NORTH_SHORE_EXCHANGE, mTrip.getHeadsignId()); // HARRINGTON
+				return true;
+			} else if (Arrays.asList( //
+					HARRINGTON, // ==
+					"Batchelor Hts" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Batchelor Hts", mTrip.getHeadsignId()); // HARRINGTON
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 16L) {
@@ -321,9 +334,6 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString(WILDLIFE_PARK, mTrip.getHeadsignId());
 				return true;
 			}
-		}
-		if (isGoodEnoughAccepted()) {
-			return super.mergeHeadsign(mTrip, mTripToMerge);
 		}
 		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
 		System.exit(-1);
