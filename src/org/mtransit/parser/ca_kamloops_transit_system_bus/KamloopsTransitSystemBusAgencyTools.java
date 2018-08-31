@@ -223,6 +223,23 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 								"104534", // Eastbound Laurier at Sifton
 						})) //
 				.compileBothTripSort());
+		map2.put(9L, new RouteTripSpec(9L, //
+				0, MTrip.HEADSIGN_TYPE_STRING, DOWNTOWN, //
+				1, MTrip.HEADSIGN_TYPE_STRING, SUMMIT) // UPPER_SAHALI
+				.addTripSort(0, //
+						Arrays.asList(new String[] { //
+						"104585", // Springhill at Gleneagles
+								"104437", // TRU Exchange
+								"104577", // Lansdowne Exchange
+						})) //
+				.addTripSort(1, //
+						Arrays.asList(new String[] { //
+						"104577", // Lansdowne Exchange
+								"104578", // TRU Exchange
+								"104515", // Summit at Notre Dame
+								"104585", // Springhill at Gleneagles
+						})) //
+				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
 
@@ -334,6 +351,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		} else if (mTrip.getRouteId() == 17L) {
 			if (Arrays.asList( //
 					KOKANEE_WAY, //
+					"Dallas / Barnhartvale", //
 					WILDLIFE_PARK //
 					).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString(WILDLIFE_PARK, mTrip.getHeadsignId());
@@ -351,7 +369,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern STARTS_WITH_NUMBER = Pattern.compile("(^[\\d]+[\\S]*)", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern ENDS_WITH_VIA = Pattern.compile("( via .*$)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^.* to )", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^.*to )", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern AND = Pattern.compile("( and )", Pattern.CASE_INSENSITIVE);
 	private static final String AND_REPLACEMENT = " & ";
@@ -360,6 +378,8 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final String CLEAN_P1_REPLACEMENT = " (";
 	private static final Pattern CLEAN_P2 = Pattern.compile("[\\s]*\\)[\\s]*");
 	private static final String CLEAN_P2_REPLACEMENT = ") ";
+
+	private static final Pattern ENDS_WITH_EXPRESS = Pattern.compile("((\\W){1}(express)($){1})", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
@@ -370,6 +390,8 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		tripHeadsign = CLEAN_P1.matcher(tripHeadsign).replaceAll(CLEAN_P1_REPLACEMENT);
 		tripHeadsign = CLEAN_P2.matcher(tripHeadsign).replaceAll(CLEAN_P2_REPLACEMENT);
 		tripHeadsign = STARTS_WITH_NUMBER.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = ENDS_WITH_EXPRESS.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = CleanUtils.cleanSlashes(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanStreetTypes(tripHeadsign);
 		tripHeadsign = CleanUtils.cleanNumbers(tripHeadsign);
 		return CleanUtils.cleanLabel(tripHeadsign);
