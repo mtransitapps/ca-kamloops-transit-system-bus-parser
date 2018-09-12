@@ -21,6 +21,7 @@ import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
+import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTripStop;
 import org.mtransit.parser.CleanUtils;
@@ -28,6 +29,7 @@ import org.mtransit.parser.mt.data.MTrip;
 
 // https://bctransit.com/*/footer/open-data
 // https://bctransit.com/servlet/bctransit/data/GTFS - Kamloops
+// https://kamloops.mapstrat.com/current/google_transit.zip
 public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(String[] args) {
@@ -56,13 +58,9 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return this.serviceIds != null && this.serviceIds.isEmpty();
 	}
 
-	private static final String INCLUDE_ONLY_SERVICE_ID_CONTAINS = "KA";
 
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {
-		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gCalendar.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)) {
-			return true;
-		}
 		if (this.serviceIds != null) {
 			return excludeUselessCalendar(gCalendar, this.serviceIds);
 		}
@@ -71,16 +69,13 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeCalendarDate(GCalendarDate gCalendarDates) {
-		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gCalendarDates.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)) {
-			return true;
-		}
 		if (this.serviceIds != null) {
 			return excludeUselessCalendarDate(gCalendarDates, this.serviceIds);
 		}
 		return super.excludeCalendarDate(gCalendarDates);
 	}
 
-	private static final String INCLUDE_AGENCY_ID = "8"; // Kamloops Transit System only
+	private static final String INCLUDE_AGENCY_ID = "1"; // Kamloops Transit System only
 
 	@Override
 	public boolean excludeRoute(GRoute gRoute) {
@@ -92,9 +87,6 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public boolean excludeTrip(GTrip gTrip) {
-		if (INCLUDE_ONLY_SERVICE_ID_CONTAINS != null && !gTrip.getServiceId().contains(INCLUDE_ONLY_SERVICE_ID_CONTAINS)) {
-			return true;
-		}
 		if (this.serviceIds != null) {
 			return excludeUselessTrip(gTrip, this.serviceIds);
 		}
@@ -121,6 +113,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	private static final String AGENCY_COLOR_GREEN = "34B233";// GREEN (from PDF Corporate Graphic Standards)
+	@SuppressWarnings("unused")
 	private static final String AGENCY_COLOR_BLUE = "002C77"; // BLUE (from PDF Corporate Graphic Standards)
 
 	private static final String AGENCY_COLOR = AGENCY_COLOR_GREEN;
@@ -167,9 +160,6 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			case 17: return COLOR_0073AE;
 			// @formatter:on
 			default:
-				if (isGoodEnoughAccepted()) {
-					return AGENCY_COLOR_BLUE;
-				}
 				System.out.println("Unexpected route color " + gRoute);
 				System.exit(-1);
 				return null;
@@ -178,66 +168,28 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
-	private static final String EXCHANGE_SHORT = "Exch";
-
-	private static final String ABERDEEN = "Aberdeen";
-	private static final String BROCKLEHURST = "Brocklehurst";
-	private static final String DOWNTOWN = "Downtown";
-	private static final String HARRINGTON = "Harrington";
-	private static final String KOKANEE_WAY = "Kokanee Way";
-	private static final String NORTH_SHORE = "North Shr";
-	private static final String NORTH_SHORE_EXCHANGE = NORTH_SHORE + " " + EXCHANGE_SHORT;
-	private static final String SUMMIT = "Summit";
-	private static final String TRU = "TRU";
-	private static final String UPPER_SAHALI = "Upper Sahali";
-	private static final String WILDLIFE_PARK = "Wildlife Pk";
+	// TRIP DIRECTION ID USED BY REAL-TIME API
+	private static final int INBOUND = 0;
+	private static final int OUTBOUND = 1;
 
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
-		map2.put(7L, new RouteTripSpec(7L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, DOWNTOWN, //
-				1, MTrip.HEADSIGN_TYPE_STRING, ABERDEEN) //
-				.addTripSort(0, //
-						Arrays.asList(new String[] { //
-						"104534", // Eastbound Laurier at Sifton
-								"104437", // TRU Exchange Bay D
-								"104440", // == Eastbound McGill at Summit
-								"104441", // != Eastbound McGill at Frontage
-								"104706", // != Northbound 6th Ave at St Paul
-								"104559", // != Northbound 640 block Columbia St W
-								"104263", // != Eastbound Seymour at 4th Ave
-								"104264", // == Northbound 6th Ave at Victoria
-								"104504", // Lansdowne Exchange Bay C
-						})) //
-				.addTripSort(1, //
-						Arrays.asList(new String[] { //
-						"104504", // Lansdowne Exchange Bay C
-								"104393", // == Westbound Columbia at 3rd Ave
-								"104450", // != Northbound 3rd Ave at Columbia
-								"104511", // != Southbound Columbia St W at Frontage
-								"104394", // != Eastbound 750 block Sahali
-								"104400", // != Westbound McGill at Frontage
-								"104401", // == Westbound McGill at Summit
-								"104512", // TRU Exchange Bay F
-								"104534", // Eastbound Laurier at Sifton
-						})) //
-				.compileBothTripSort());
 		map2.put(9L, new RouteTripSpec(9L, //
-				0, MTrip.HEADSIGN_TYPE_STRING, DOWNTOWN, //
-				1, MTrip.HEADSIGN_TYPE_STRING, SUMMIT) // UPPER_SAHALI
-				.addTripSort(0, //
+				INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
+				OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Summit") // Upper Sahali
+				.addTripSort(INBOUND, //
 						Arrays.asList(new String[] { //
-						"104585", // Springhill at Gleneagles
-								"104437", // TRU Exchange
-								"104577", // Lansdowne Exchange
+						"379", // "104585", // Springhill at Gleneagles
+								"336", // "104437", // TRU Exchange
+								"370", // "104577", // Lansdowne Exchange
 						})) //
-				.addTripSort(1, //
+				.addTripSort(OUTBOUND, //
 						Arrays.asList(new String[] { //
-						"104577", // Lansdowne Exchange
-								"104578", // TRU Exchange
-								"104515", // Summit at Notre Dame
-								"104585", // Springhill at Gleneagles
+						"370", // "104577", // Lansdowne Exchange
+								"372", // "104578", // TRU Exchange
+								"191", // "104515", // Summit at Notre Dame
+								"379", // "104585", // Springhill at Gleneagles
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
@@ -272,6 +224,22 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
+		if (mRoute.getId() == 18L) {
+			if (gTrip.getDirectionId() == 0) { // Downtown - WEST
+				if ("Downtown".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.WEST.intValue());
+					return;
+				}
+			} else if (gTrip.getDirectionId() == 1) { // Mt. Paul - EAST
+				if ("Mt. Paul".equalsIgnoreCase(gTrip.getTripHeadsign())) {
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.EAST.intValue());
+					return;
+				}
+			}
+			System.out.printf("\n%s: Unexpected trips headsign for %s!\n", mTrip.getRouteId(), gTrip);
+			System.exit(-1);
+			return;
+		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
 	}
 
@@ -280,81 +248,59 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
 		if (mTrip.getRouteId() == 1L) {
 			if (Arrays.asList( //
-					NORTH_SHORE_EXCHANGE, //
-					DOWNTOWN //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
-				return true;
-			} else if (Arrays.asList( //
-					NORTH_SHORE_EXCHANGE, //
-					BROCKLEHURST //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(BROCKLEHURST, mTrip.getHeadsignId());
+					"North Shr Exch", //
+					"Downtown" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 2L) {
 			if (Arrays.asList( //
-					NORTH_SHORE_EXCHANGE, //
-					DOWNTOWN //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
+					"North Shr Exch", //
+					"Downtown" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 3L) {
 			if (Arrays.asList( //
-					NORTH_SHORE_EXCHANGE, //
-					DOWNTOWN //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
+					"North Shr Exch", //
+					"Downtown" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 9L) {
+		} else if (mTrip.getRouteId() == 7L) {
 			if (Arrays.asList( //
-					DOWNTOWN, // SAME
-					TRU // SAME
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(DOWNTOWN, mTrip.getHeadsignId());
-				return true;
-			}
-			if (Arrays.asList( //
-					DOWNTOWN, // SAME
-					TRU, // SAME
-					SUMMIT, //
-					UPPER_SAHALI //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(SUMMIT, mTrip.getHeadsignId()); // UPPER_SAHALI
+					"TRU Only", //
+					"Downtown" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 14L) {
 			if (Arrays.asList( //
-					HARRINGTON, // ==
-					NORTH_SHORE, //
-					NORTH_SHORE_EXCHANGE //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(NORTH_SHORE_EXCHANGE, mTrip.getHeadsignId()); // HARRINGTON
-				return true;
-			} else if (Arrays.asList( //
-					HARRINGTON, // ==
-					"Batchelor Hts" //
+					"Harrington", // <>
+					"North Shr Exch" //
 			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Batchelor Hts", mTrip.getHeadsignId()); // HARRINGTON
+				mTrip.setHeadsignString("North Shr Exch", mTrip.getHeadsignId()); //
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 16L) {
 			if (Arrays.asList( //
-					DOWNTOWN, //
-					TRU //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(TRU, mTrip.getHeadsignId());
+					"TRU", //
+					"Downtown" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId()); // TRU
 				return true;
 			}
 		} else if (mTrip.getRouteId() == 17L) {
 			if (Arrays.asList( //
-					KOKANEE_WAY, //
+					"Kokanee Way", //
 					"Dallas / Barnhartvale", //
-					WILDLIFE_PARK //
-					).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString(WILDLIFE_PARK, mTrip.getHeadsignId());
+					"Wildlife Pk" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Wildlife Pk", mTrip.getHeadsignId());
 				return true;
 			}
 		}
@@ -364,7 +310,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W){1}(exchange|ex\\.)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
-	private static final String EXCHANGE_REPLACEMENT = "$2" + EXCHANGE_SHORT + "$4";
+	private static final String EXCHANGE_REPLACEMENT = "$2" + "Exch" + "$4";
 
 	private static final Pattern STARTS_WITH_NUMBER = Pattern.compile("(^[\\d]+[\\S]*)", Pattern.CASE_INSENSITIVE);
 
@@ -407,5 +353,10 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
 		gStopName = CleanUtils.cleanNumbers(gStopName);
 		return CleanUtils.cleanLabel(gStopName);
+	}
+
+	@Override
+	public int getStopId(GStop gStop) {
+		return Integer.parseInt(gStop.getStopCode()); // use stop code as stop ID
 	}
 }
