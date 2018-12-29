@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.mtransit.commons.StrategicMappingCommons;
 import org.mtransit.parser.DefaultAgencyTools;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
@@ -168,28 +169,24 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.getRouteColor(gRoute);
 	}
 
-	// TRIP DIRECTION ID USED BY REAL-TIME API
-	private static final int INBOUND = 0;
-	private static final int OUTBOUND = 1;
-
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
 		map2.put(9L, new RouteTripSpec(9L, //
-				INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
-				OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Summit") // Upper Sahali
-				.addTripSort(INBOUND, //
+				StrategicMappingCommons.INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
+				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Upper Sahali") // Summit
+				.addTripSort(StrategicMappingCommons.INBOUND, //
 						Arrays.asList(new String[] { //
-						"379", // "104585", // Springhill at Gleneagles
-								"336", // "104437", // TRU Exchange
-								"370", // "104577", // Lansdowne Exchange
+						Stops.ALL_STOPS.get("104585"), Stops2.ALL_STOPS2.get("104585"), // Springhill at Gleneagles
+								Stops.ALL_STOPS.get("104437"), Stops2.ALL_STOPS2.get("104437"), // TRU Exchange
+								Stops.ALL_STOPS.get("104577"), Stops2.ALL_STOPS2.get("104577"), // Lansdowne Exchange
 						})) //
-				.addTripSort(OUTBOUND, //
+				.addTripSort(StrategicMappingCommons.OUTBOUND, //
 						Arrays.asList(new String[] { //
-						"370", // "104577", // Lansdowne Exchange
-								"372", // "104578", // TRU Exchange
-								"191", // "104515", // Summit at Notre Dame
-								"379", // "104585", // Springhill at Gleneagles
+						Stops.ALL_STOPS.get("104577"), Stops2.ALL_STOPS2.get("104577"), // Lansdowne Exchange
+								Stops.ALL_STOPS.get("104578"), Stops2.ALL_STOPS2.get("104578"), // TRU Exchange
+								Stops.ALL_STOPS.get("104515"), Stops2.ALL_STOPS2.get("104515"), // Summit at Notre Dame
+								Stops.ALL_STOPS.get("104585"), Stops2.ALL_STOPS2.get("104585"), // Springhill at Gleneagles
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
