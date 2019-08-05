@@ -259,6 +259,13 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
+			if (Arrays.asList( //
+					"Downtown", // <>
+					"Brocklehurst" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Brocklehurst", mTrip.getHeadsignId());
+				return true;
+			}
 		} else if (mTrip.getRouteId() == 3L) {
 			if (Arrays.asList( //
 					"North Shr Exch", //
