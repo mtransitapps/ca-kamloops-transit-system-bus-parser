@@ -177,16 +177,16 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Upper Sahali") // Summit
 				.addTripSort(StrategicMappingCommons.INBOUND, //
 						Arrays.asList(new String[] { //
-						Stops.ALL_STOPS.get("104585"), Stops2.ALL_STOPS2.get("104585"), // Springhill at Gleneagles
-								Stops.ALL_STOPS.get("104437"), Stops2.ALL_STOPS2.get("104437"), // TRU Exchange
-								Stops.ALL_STOPS.get("104577"), Stops2.ALL_STOPS2.get("104577"), // Lansdowne Exchange
+						Stops.getALL_STOPS().get("104585"), // Springhill at Gleneagles
+								Stops.getALL_STOPS().get("104437"), // TRU Exchange
+								Stops.getALL_STOPS().get("104577"), // Lansdowne Exchange
 						})) //
 				.addTripSort(StrategicMappingCommons.OUTBOUND, //
 						Arrays.asList(new String[] { //
-						Stops.ALL_STOPS.get("104577"), Stops2.ALL_STOPS2.get("104577"), // Lansdowne Exchange
-								Stops.ALL_STOPS.get("104578"), Stops2.ALL_STOPS2.get("104578"), // TRU Exchange
-								Stops.ALL_STOPS.get("104515"), Stops2.ALL_STOPS2.get("104515"), // Summit at Notre Dame
-								Stops.ALL_STOPS.get("104585"), Stops2.ALL_STOPS2.get("104585"), // Springhill at Gleneagles
+						Stops.getALL_STOPS().get("104577"),  // Lansdowne Exchange
+								Stops.getALL_STOPS().get("104578"), // TRU Exchange
+								Stops.getALL_STOPS().get("104515"), // Summit at Notre Dame
+								Stops.getALL_STOPS().get("104585"), // Springhill at Gleneagles
 						})) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
