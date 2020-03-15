@@ -1,19 +1,14 @@
 package org.mtransit.parser.ca_kamloops_transit_system_bus;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.regex.Pattern;
-
 import org.apache.commons.lang3.StringUtils;
 import org.mtransit.commons.StrategicMappingCommons;
+import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.DefaultAgencyTools;
+import org.mtransit.parser.MTLog;
 import org.mtransit.parser.Pair;
 import org.mtransit.parser.SplitUtils;
-import org.mtransit.parser.Utils;
 import org.mtransit.parser.SplitUtils.RouteTripSpec;
+import org.mtransit.parser.Utils;
 import org.mtransit.parser.gtfs.data.GCalendar;
 import org.mtransit.parser.gtfs.data.GCalendarDate;
 import org.mtransit.parser.gtfs.data.GRoute;
@@ -24,9 +19,15 @@ import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
 import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
-import org.mtransit.parser.mt.data.MTripStop;
-import org.mtransit.parser.CleanUtils;
 import org.mtransit.parser.mt.data.MTrip;
+import org.mtransit.parser.mt.data.MTripStop;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.regex.Pattern;
 
 // https://bctransit.com/*/footer/open-data
 // https://bctransit.com/servlet/bctransit/data/GTFS - Kamloops
@@ -47,18 +48,17 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	@Override
 	public void start(String[] args) {
-		System.out.printf("\nGenerating Kamloops Transit System bus data...");
+		MTLog.log("Generating Kamloops Transit System bus data...");
 		long start = System.currentTimeMillis();
 		this.serviceIds = extractUsefulServiceIds(args, this, true);
 		super.start(args);
-		System.out.printf("\nGenerating Kamloops Transit System bus data... DONE in %s.\n", Utils.getPrettyDuration(System.currentTimeMillis() - start));
+		MTLog.log("Generating Kamloops Transit System bus data... DONE in %s.", Utils.getPrettyDuration(System.currentTimeMillis() - start));
 	}
 
 	@Override
 	public boolean excludingAll() {
 		return this.serviceIds != null && this.serviceIds.isEmpty();
 	}
-
 
 	@Override
 	public boolean excludeCalendar(GCalendar gCalendar) {
@@ -161,8 +161,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			case 17: return COLOR_0073AE;
 			// @formatter:on
 			default:
-				System.out.println("Unexpected route color " + gRoute);
-				System.exit(-1);
+				MTLog.logFatal("Unexpected route color for %s!", gRoute);
 				return null;
 			}
 		}
@@ -170,24 +169,25 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	private static HashMap<Long, RouteTripSpec> ALL_ROUTE_TRIPS2;
+
 	static {
-		HashMap<Long, RouteTripSpec> map2 = new HashMap<Long, RouteTripSpec>();
+		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
 		map2.put(9L, new RouteTripSpec(9L, //
 				StrategicMappingCommons.INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
 				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Upper Sahali") // Summit
 				.addTripSort(StrategicMappingCommons.INBOUND, //
-						Arrays.asList(new String[] { //
-						Stops.getALL_STOPS().get("104585"), // Springhill at Gleneagles
+						Arrays.asList(//
+								Stops.getALL_STOPS().get("104585"), // Springhill at Gleneagles
 								Stops.getALL_STOPS().get("104437"), // TRU Exchange
-								Stops.getALL_STOPS().get("104577"), // Lansdowne Exchange
-						})) //
+								Stops.getALL_STOPS().get("104577") // Lansdowne Exchange
+						)) //
 				.addTripSort(StrategicMappingCommons.OUTBOUND, //
-						Arrays.asList(new String[] { //
-						Stops.getALL_STOPS().get("104577"),  // Lansdowne Exchange
+						Arrays.asList(//
+								Stops.getALL_STOPS().get("104577"),  // Lansdowne Exchange
 								Stops.getALL_STOPS().get("104578"), // TRU Exchange
 								Stops.getALL_STOPS().get("104515"), // Summit at Notre Dame
-								Stops.getALL_STOPS().get("104585"), // Springhill at Gleneagles
-						})) //
+								Stops.getALL_STOPS().get("104585") // Springhill at Gleneagles
+						)) //
 				.compileBothTripSort());
 		ALL_ROUTE_TRIPS2 = map2;
 	}
@@ -233,8 +233,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 					return;
 				}
 			}
-			System.out.printf("\n%s: Unexpected trips headsign for %s!\n", mTrip.getRouteId(), gTrip);
-			System.exit(-1);
+			MTLog.logFatal("%s: Unexpected trips head-sign for %s!", mTrip.getRouteId(), gTrip);
 			return;
 		}
 		mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), gTrip.getDirectionId());
@@ -308,18 +307,14 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				return true;
 			}
 		}
-		System.out.printf("\nUnexpected trips to merge %s & %s!\n", mTrip, mTripToMerge);
-		System.exit(-1);
+		MTLog.logFatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
 		return false;
 	}
 
-	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W){1}(exchange|ex\\.)(\\W|$){1})", Pattern.CASE_INSENSITIVE);
+	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W)(exchange|ex\\.)(\\W|$))", Pattern.CASE_INSENSITIVE);
 	private static final String EXCHANGE_REPLACEMENT = "$2" + "Exch" + "$4";
 
 	private static final Pattern STARTS_WITH_NUMBER = Pattern.compile("(^[\\d]+[\\S]*)", Pattern.CASE_INSENSITIVE);
-
-	private static final Pattern ENDS_WITH_VIA = Pattern.compile("( via .*$)", Pattern.CASE_INSENSITIVE);
-	private static final Pattern STARTS_WITH_TO = Pattern.compile("(^.*to )", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern AND = Pattern.compile("( and )", Pattern.CASE_INSENSITIVE);
 	private static final String AND_REPLACEMENT = " & ";
@@ -329,13 +324,12 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	private static final Pattern CLEAN_P2 = Pattern.compile("[\\s]*\\)[\\s]*");
 	private static final String CLEAN_P2_REPLACEMENT = ") ";
 
-	private static final Pattern ENDS_WITH_EXPRESS = Pattern.compile("((\\W){1}(express)($){1})", Pattern.CASE_INSENSITIVE);
+	private static final Pattern ENDS_WITH_EXPRESS = Pattern.compile("((\\W)(express)($))", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public String cleanTripHeadsign(String tripHeadsign) {
 		tripHeadsign = EXCHANGE.matcher(tripHeadsign).replaceAll(EXCHANGE_REPLACEMENT);
-		tripHeadsign = ENDS_WITH_VIA.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
-		tripHeadsign = STARTS_WITH_TO.matcher(tripHeadsign).replaceAll(StringUtils.EMPTY);
+		tripHeadsign = CleanUtils.keepToAndRemoveVia(tripHeadsign);
 		tripHeadsign = AND.matcher(tripHeadsign).replaceAll(AND_REPLACEMENT);
 		tripHeadsign = CLEAN_P1.matcher(tripHeadsign).replaceAll(CLEAN_P1_REPLACEMENT);
 		tripHeadsign = CLEAN_P2.matcher(tripHeadsign).replaceAll(CLEAN_P2_REPLACEMENT);
@@ -347,13 +341,12 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return CleanUtils.cleanLabel(tripHeadsign);
 	}
 
-	private static final Pattern STARTS_WITH_IMPL = Pattern.compile("(^(\\(\\-IMPL\\-\\)))", Pattern.CASE_INSENSITIVE);
-	private static final Pattern STARTS_WITH_BOUND = Pattern.compile("(^(east|west|north|south)bound)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STARTS_WITH_IMPL = Pattern.compile("(^(\\(-IMPL-\\)))", Pattern.CASE_INSENSITIVE);
 
 	@Override
 	public String cleanStopName(String gStopName) {
 		gStopName = STARTS_WITH_IMPL.matcher(gStopName).replaceAll(StringUtils.EMPTY);
-		gStopName = STARTS_WITH_BOUND.matcher(gStopName).replaceAll(StringUtils.EMPTY);
+		gStopName = CleanUtils.cleanBounds(gStopName);
 		gStopName = CleanUtils.CLEAN_AT.matcher(gStopName).replaceAll(CleanUtils.CLEAN_AT_REPLACEMENT);
 		gStopName = EXCHANGE.matcher(gStopName).replaceAll(EXCHANGE_REPLACEMENT);
 		gStopName = CleanUtils.cleanStreetTypes(gStopName);
