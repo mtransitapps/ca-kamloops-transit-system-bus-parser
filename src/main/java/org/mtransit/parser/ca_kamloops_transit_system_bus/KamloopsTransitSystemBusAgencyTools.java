@@ -17,7 +17,6 @@ import org.mtransit.parser.gtfs.data.GStop;
 import org.mtransit.parser.gtfs.data.GTrip;
 import org.mtransit.parser.gtfs.data.GTripStop;
 import org.mtransit.parser.mt.data.MAgency;
-import org.mtransit.parser.mt.data.MDirectionType;
 import org.mtransit.parser.mt.data.MRoute;
 import org.mtransit.parser.mt.data.MTrip;
 import org.mtransit.parser.mt.data.MTripStop;
@@ -100,8 +99,8 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public long getRouteId(GRoute gRoute) {
-		return Long.parseLong(gRoute.getRouteShortName()); // use route short name as route ID
+	public long getRouteId(GRoute gRoute) { // used by GTFS-RT
+		return super.getRouteId(gRoute);
 	}
 
 	@Override
@@ -172,9 +171,9 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		map2.put(9L, new RouteTripSpec(9L, //
+		map2.put(8L, new RouteTripSpec(8L, // 9 // SPLITTED BECAUSE trip head-sign mess
 				StrategicMappingCommons.INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
-				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Upper Sahali") // Summit
+				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Gleneagles") // Summit
 				.addTripSort(StrategicMappingCommons.INBOUND, //
 						Arrays.asList(//
 								Stops.getALL_STOPS().get("104585"), // Springhill at Gleneagles
@@ -216,20 +215,24 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return super.splitTripStop(mRoute, gTrip, gTripStop, splitTrips, routeGTFS);
 	}
 
+	private final HashMap<Long, Long> routeIdToShortName = new HashMap<>();
+
 	@Override
 	public void setTripHeadsign(MRoute mRoute, MTrip mTrip, GTrip gTrip, GSpec gtfs) {
 		if (ALL_ROUTE_TRIPS2.containsKey(mRoute.getId())) {
 			return; // split
 		}
-		if (mRoute.getId() == 18L) {
+		final long rsn = Long.parseLong(mRoute.getShortName());
+		this.routeIdToShortName.put(mRoute.getId(), rsn);
+		if (rsn == 18L) {
 			if (gTrip.getDirectionId() == 0) { // Downtown - WEST
 				if ("Downtown".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.WEST.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.WEST);
 					return;
 				}
 			} else if (gTrip.getDirectionId() == 1) { // Mt. Paul - EAST
 				if ("Mt. Paul".equalsIgnoreCase(gTrip.getTripHeadsign())) {
-					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), MDirectionType.EAST.intValue());
+					mTrip.setHeadsignString(cleanTripHeadsign(gTrip.getTripHeadsign()), StrategicMappingCommons.EAST);
 					return;
 				}
 			}
@@ -242,7 +245,8 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean mergeHeadsign(MTrip mTrip, MTrip mTripToMerge) {
 		List<String> headsignsValues = Arrays.asList(mTrip.getHeadsignValue(), mTripToMerge.getHeadsignValue());
-		if (mTrip.getRouteId() == 1L) {
+		final long rsn = this.routeIdToShortName.get(mTrip.getRouteId());
+		if (rsn == 1L) {
 			if (Arrays.asList( //
 					"North Shr Exch", //
 					"Downtown" //
@@ -250,7 +254,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 2L) {
+		} else if (rsn == 2L) {
 			if (Arrays.asList( //
 					"North Shr Exch", //
 					"Downtown" //
@@ -265,7 +269,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Brocklehurst", mTrip.getHeadsignId());
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 3L) {
+		} else if (rsn == 3L) {
 			if (Arrays.asList( //
 					"North Shr Exch", //
 					"Downtown" //
@@ -273,7 +277,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 7L) {
+		} else if (rsn == 7L) {
 			if (Arrays.asList( //
 					"TRU Only", //
 					"Downtown" //
@@ -281,7 +285,21 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 14L) {
+		} else if (rsn == 9L) {
+			if (Arrays.asList( //
+					"Gleneagles", // <>
+					"Downtown" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
+				return true;
+			} else if (Arrays.asList( //
+					"Downtown", // <>
+					"Gleneagles" //
+			).containsAll(headsignsValues)) {
+				mTrip.setHeadsignString("Gleneagles", mTrip.getHeadsignId());
+				return true;
+			}
+		} else if (rsn == 14L) {
 			if (Arrays.asList( //
 					"Harrington", // <>
 					"North Shr Exch" //
@@ -289,7 +307,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("North Shr Exch", mTrip.getHeadsignId()); //
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 16L) {
+		} else if (rsn == 16L) {
 			if (Arrays.asList( //
 					"TRU", //
 					"Downtown" //
@@ -297,7 +315,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId()); // TRU
 				return true;
 			}
-		} else if (mTrip.getRouteId() == 17L) {
+		} else if (rsn == 17L) {
 			if (Arrays.asList( //
 					"Kokanee Way", //
 					"Dallas / Barnhartvale", //
@@ -355,7 +373,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	}
 
 	@Override
-	public int getStopId(GStop gStop) {
-		return Integer.parseInt(gStop.getStopCode()); // use stop code as stop ID
+	public int getStopId(GStop gStop) { // used by GTFS-RT
+		return super.getStopId(gStop);
 	}
 }
