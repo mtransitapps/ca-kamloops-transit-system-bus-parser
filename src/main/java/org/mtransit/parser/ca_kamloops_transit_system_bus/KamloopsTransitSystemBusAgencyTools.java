@@ -256,6 +256,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 			}
 		} else if (rsn == 2L) {
 			if (Arrays.asList( //
+					StringUtils.EMPTY, //
 					"North Shr Exch", //
 					"Downtown" //
 			).containsAll(headsignsValues)) {
@@ -325,8 +326,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				return true;
 			}
 		}
-		MTLog.logFatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
-		return false;
+		throw new MTLog.Fatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
 	}
 
 	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W)(exchange|ex\\.)(\\W|$))", Pattern.CASE_INSENSITIVE);
