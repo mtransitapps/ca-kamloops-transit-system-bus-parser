@@ -171,20 +171,20 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		map2.put(8L, new RouteTripSpec(8L, // 9 // SPLITTED BECAUSE trip head-sign mess
+		map2.put(373L, new RouteTripSpec(373L, // 9 // SPLITTED BECAUSE trip head-sign mess
 				StrategicMappingCommons.INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
 				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Gleneagles") // Summit
 				.addTripSort(StrategicMappingCommons.INBOUND, //
-						Arrays.asList(//
+						Arrays.asList( //
 								Stops.getALL_STOPS().get("104585"), // Springhill at Gleneagles
 								Stops.getALL_STOPS().get("104437"), // TRU Exchange
 								Stops.getALL_STOPS().get("104577") // Lansdowne Exchange
 						)) //
 				.addTripSort(StrategicMappingCommons.OUTBOUND, //
-						Arrays.asList(//
+						Arrays.asList( //
 								Stops.getALL_STOPS().get("104577"),  // Lansdowne Exchange
 								Stops.getALL_STOPS().get("104578"), // TRU Exchange
-								Stops.getALL_STOPS().get("104515"), // Summit at Notre Dame
+								Stops.getALL_STOPS().get("104515"), "14620", // Summit at Notre Dame
 								Stops.getALL_STOPS().get("104585") // Springhill at Gleneagles
 						)) //
 				.compileBothTripSort());
@@ -284,20 +284,6 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 					"Downtown" //
 			).containsAll(headsignsValues)) {
 				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
-				return true;
-			}
-		} else if (rsn == 9L) {
-			if (Arrays.asList( //
-					"Gleneagles", // <>
-					"Downtown" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Downtown", mTrip.getHeadsignId());
-				return true;
-			} else if (Arrays.asList( //
-					"Downtown", // <>
-					"Gleneagles" //
-			).containsAll(headsignsValues)) {
-				mTrip.setHeadsignString("Gleneagles", mTrip.getHeadsignId());
 				return true;
 			}
 		} else if (rsn == 14L) {
