@@ -171,7 +171,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		map2.put(373L, new RouteTripSpec(373L, // 9 // SPLITTED BECAUSE trip head-sign mess
+		map2.put(403L, new RouteTripSpec(403L, // 9 // SPLITTED BECAUSE trip head-sign mess
 				StrategicMappingCommons.INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
 				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Gleneagles") // Summit
 				.addTripSort(StrategicMappingCommons.INBOUND, //
@@ -312,7 +312,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 				return true;
 			}
 		}
-		throw new MTLog.Fatal("Unexpected trips to merge %s & %s!", mTrip, mTripToMerge);
+		throw new MTLog.Fatal("%s: Unexpected trips to merge %s & %s!", rsn, mTrip, mTripToMerge);
 	}
 
 	private static final Pattern EXCHANGE = Pattern.compile("((^|\\W)(exchange|ex\\.)(\\W|$))", Pattern.CASE_INSENSITIVE);
