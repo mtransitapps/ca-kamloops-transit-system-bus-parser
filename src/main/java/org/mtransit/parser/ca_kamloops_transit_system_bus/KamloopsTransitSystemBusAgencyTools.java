@@ -170,7 +170,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	static {
 		HashMap<Long, RouteTripSpec> map2 = new HashMap<>();
-		map2.put(403L, new RouteTripSpec(403L, // 9 // SPLITTED BECAUSE trip head-sign mess
+		map2.put(418L, new RouteTripSpec(418L, // 9 // SPLITTED BECAUSE trip head-sign mess
 				StrategicMappingCommons.INBOUND, MTrip.HEADSIGN_TYPE_STRING, "Downtown", //
 				StrategicMappingCommons.OUTBOUND, MTrip.HEADSIGN_TYPE_STRING, "Gleneagles") // Summit
 				.addTripSort(StrategicMappingCommons.INBOUND, //
