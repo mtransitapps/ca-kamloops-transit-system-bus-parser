@@ -13,7 +13,6 @@ import org.mtransit.parser.mt.data.MAgency;
 import java.util.regex.Pattern;
 
 // https://www.bctransit.com/open-data
-// https://kamloops.mapstrat.com/current/google_transit.zip
 public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 
 	public static void main(@NotNull String[] args) {
@@ -45,6 +44,11 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 	@Override
 	public boolean useRouteShortNameForRouteId() {
 		return false; // route ID used by GTFS-RT
+	}
+
+	@Override
+	public @Nullable String getRouteIdCleanupRegex() {
+		return "\\-[A-Z]+$";
 	}
 
 	@Override
@@ -108,7 +112,7 @@ public class KamloopsTransitSystemBusAgencyTools extends DefaultAgencyTools {
 		return true;
 	}
 
-	private static final Pattern STARTS_WITH_NUMBER = Pattern.compile("(^[\\d]+[\\S]*)", Pattern.CASE_INSENSITIVE);
+	private static final Pattern STARTS_WITH_NUMBER = Pattern.compile("(^\\d+\\S*)", Pattern.CASE_INSENSITIVE);
 
 	private static final Pattern ENDS_WITH_EXPRESS = Pattern.compile("((\\W)(express)($))", Pattern.CASE_INSENSITIVE);
 
